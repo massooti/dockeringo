@@ -1,6 +1,7 @@
 package main
 
 import (
+	"dockeringo/handler"
 	"fmt"
 
 	"github.com/gin-gonic/gin"
@@ -13,6 +14,11 @@ func main() {
 			"message": "Hey Lets get started ...",
 		})
 	})
+
+	r.POST("/run", func(c *gin.Context) {
+		handler.ContainerInit(c)
+	})
+
 	err := r.Run(":9808")
 	if err != nil {
 		panic(fmt.Sprintf("Failed to start the web server - Error: %v", err))
