@@ -3,89 +3,70 @@ package app
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
-	network "github.com/docker/docker/api/types/network"
-	natting "github.com/docker/go-connections/nat"
-	"go.etcd.io/etcd/client"
+	"github.com/docker/docker/client"
+
 )
-
-func testContainerApp(parameter string) string {
-	return parameter
+type Parameters struct{
+    Image string
+	Url   string
+	Users int
 }
 
-func RunContainer2(parameter string) string {
-	return parameter
-}
-func ContainerRun(image string, command []string, volumes []VolumeMount) (id string, err error) {
-	hostConfig := container.HostConfig{}
 
-	//	hostConfig.Mounts = make([]mount.Mount,0);
 
-	var mounts []mount.Mount
-
-	for _, volume := range volumes {
-		mount := mount.Mount{
-			Type:   mount.TypeVolume,
-			Source: volume.Volume.Name,
-			Target: volume.HostPath,
-		}
-		mounts = append(mounts, mount)
-	}
-
-	hostConfig.Mounts = mounts
-
-	resp, err := c.cli.ContainerCreate(context.Background(), &container.Config{
-		Tty:   true,
-		Image: image,
-		Cmd:   command,
-	}, &hostConfig, nil, nil, "")
-
-	if err != nil {
-		return "", err
-	}
-
-	err = c.cli.ContainerStart(context.Background(), resp.ID, types.ContainerStartOptions{})
-	if err != nil {
-		return "", err
-	}
-
-	return resp.ID, nil
+func TestContainerApp(parameter Parameters) string {
+	names := []string{"Axios", "Sidero", "Thanos", "Odigos", "Kiali", "Istio", "Persis", "Cyrus", "Darius", "Dario"}
+	// fmt.Printf("%+v\n", Paramers{"my-selnium2", parameter, in})
+	// envCases := []string{"LINK_CLASS="+parameter, "ROBOT_NAME="+names[0]}
+	fmt.Printf("%+v\n", names)
+	fmt.Printf("%+v\n", parameter.Url)
+	return "response"
 }
 
-func (c *Controller) ContainerWait(id string) (state int64, err error) {
-	resultC, errC := c.cli.ContainerWait(context.Background(), id, "")
-	select {
-	case err := <-errC:
-		return 0, err
-	case result := <-resultC:
-		return result.StatusCode, nil
+func RunContainer2(parameter string) {
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+	if err != nil {
+		panic(err)
 	}
+
+	containers, err := cli.ContainerList(context.Background(), types.ContainerListOptions{All:true})
+	if err != nil {
+		panic(err)
+	}
+
+	for _, container := range containers {
+		fmt.Printf("%s %s\n", container.ID[:10], container.Image)
+	}
+
 }
 
-func (c *Controller) ContainerRunAndClean(image string, command []string, volumes []VolumeMount) (statusCode int64, body string, err error) {
-	// Start the container
-	id, err := c.ContainerRun(image, command, volumes)
+func RunContainer4(params Parameters) {
+	names := []string{"Axios", "Sidero", "Thanos", "Odigos", "Kiali", "Istio", "Persis", "Cyrus", "Darius", "Dario"}
+	envCases := []string{"LINK_CLASS=" + params.Url, "ROBOT_NAME="+names[0]}
+	ctx := context.Background()
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		return statusCode, body, err
+		fmt.Printf("here")
+		panic(err)
+	}
+	defer cli.Close()
+	numbers = params.Users / 100 
+	// envCases := []string{"LINK_CLASS=https://test.alocom.co/class/zaeem/e8a2f45f", "ROBOT_NAME=golang"}
+	resp, err := cli.ContainerCreate(ctx, &container.Config{
+		Tty: true,
+		Image: params.Image,
+		Env:envCases,
+		}, nil, nil, nil, "cont-2")
+	if err != nil {
+		panic(err)
 	}
 
-	// Wait for it to finish
-	statusCode, err = c.ContainerWait(id)
-	if err != nil {
-		return statusCode, body, err
+	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+		panic(err)
 	}
 
-	// Get the log
-	body, _ = c.ContainerLog(id)
-
-	err = c.cli.ContainerRemove(context.Background(), id, types.ContainerRemoveOptions{})
-
-	if err != nil {
-		fmt.Printf("Unable to remove container %q: %q\n", id, err)
-	}
-
-	return statusCode, body, err
+	fmt.Println(resp.ID)
 }

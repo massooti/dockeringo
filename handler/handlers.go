@@ -3,7 +3,7 @@ package handler
 import (
 	"dockeringo/app"
 	"net/http"
-
+	"fmt"
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,11 +19,13 @@ func ContainerInit(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	// fmt.Printf(runContainerRequest.Link)
-	// pa := app.RunContainer2(runContainerRequest.Link)
-	pa := app.ContainerRun()
+	fmt.Printf("1")
+	params := app.Parameters{"my-selenium2", runContainerRequest.Link, runContainerRequest.Guests}
+	fmt.Printf("%+v\n", params)
+	app.RunContainer4(params)
+	
 	c.JSON(200, gin.H{
 		"message":   "short url created successfully",
-		"short_url": "host" + pa,
+		"short_url": "host" + "pa",
 	})
 }
