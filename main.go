@@ -15,8 +15,12 @@ func main() {
 		})
 	})
 
-	r.POST("/run", func(c *gin.Context) {
-		handler.ContainerInit(c)
+	r.POST("/start", func(c *gin.Context) {
+		handler.Start(c)
+	})
+
+	r.POST("/stop", func(c *gin.Context) {
+		handler.Stop(c)
 	})
 
 	err := r.Run(":9808")

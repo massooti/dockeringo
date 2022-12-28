@@ -3,36 +3,27 @@ package app
 import (
 	"context"
 	"fmt"
+	"log"
+	"strconv"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
-
 )
-type Parameters struct{
-    Image string
+
+type Parameters struct {
+	Image string
 	Url   string
 	Users int
 }
 
-
-
-func TestContainerApp(parameter Parameters) string {
-	names := []string{"Axios", "Sidero", "Thanos", "Odigos", "Kiali", "Istio", "Persis", "Cyrus", "Darius", "Dario"}
-	// fmt.Printf("%+v\n", Paramers{"my-selnium2", parameter, in})
-	// envCases := []string{"LINK_CLASS="+parameter, "ROBOT_NAME="+names[0]}
-	fmt.Printf("%+v\n", names)
-	fmt.Printf("%+v\n", parameter.Url)
-	return "response"
-}
-
-func RunContainer2(parameter string) {
+func RunContainer(parameter string) {
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		panic(err)
 	}
 
-	containers, err := cli.ContainerList(context.Background(), types.ContainerListOptions{All:true})
+	containers, err := cli.ContainerList(context.Background(), types.ContainerListOptions{All: true})
 	if err != nil {
 		panic(err)
 	}
@@ -43,9 +34,9 @@ func RunContainer2(parameter string) {
 
 }
 
-func RunContainer4(params Parameters) {
-	names := []string{"Axios", "Sidero", "Thanos", "Odigos", "Kiali", "Istio", "Persis", "Cyrus", "Darius", "Dario"}
-	envCases := []string{"LINK_CLASS=" + params.Url, "ROBOT_NAME="+names[0]}
+func StartAndRunContainers(params Parameters) {
+	names := []string{"Istio", "Axios", "Sidero", "Thanos", "Odigos", "Kiali", "Persis", "Cyrus", "Darius", "Dario"}
+
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
@@ -53,20 +44,47 @@ func RunContainer4(params Parameters) {
 		panic(err)
 	}
 	defer cli.Close()
-	numbers = params.Users / 100 
+	numbers := params.Users / 100
+	for i := 1; i <= numbers; i++ {
+		containerName := "cont-" + strconv.Itoa(i)
+		envCases := []string{"LINK_CLASS=" + params.Url, "ROBOT_NAME=" + names[i]}
+		resp, err := cli.ContainerCreate(ctx, &container.Config{
+			Tty:   true,
+			Image: params.Image,
+			Env:   envCases,
+		}, nil, nil, nil, containerName)
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Println(i)
+		if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+			panic(err)
+		}
+		fmt.Println(resp.ID)
+	}
 	// envCases := []string{"LINK_CLASS=https://test.alocom.co/class/zaeem/e8a2f45f", "ROBOT_NAME=golang"}
-	resp, err := cli.ContainerCreate(ctx, &container.Config{
-		Tty: true,
-		Image: params.Image,
-		Env:envCases,
-		}, nil, nil, nil, "cont-2")
+
+}
+
+// Stop and remove a container
+func StopAndRemoveContainer(containername string) error {
+	ctx := context.Background()
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
+		fmt.Printf("here")
 		panic(err)
 	}
+	defer cli.Close()
 
-	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
-		panic(err)
+	removeOptions := types.ContainerRemoveOptions{
+		RemoveVolumes: true,
+		Force:         true,
+	}
+	if err := cli.ContainerRemove(ctx, containername, removeOptions); err != nil {
+		log.Printf("Unable to remove container: %s", err)
+		return err
 	}
 
-	fmt.Println(resp.ID)
+	return nil
 }
