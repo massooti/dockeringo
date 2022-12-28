@@ -21,4 +21,4 @@ COPY --from=builder app .
 EXPOSE 9808
 # Exec built binary
 RUN chmod +x ./app
-CMD ./app
+CMD ["./app"]
