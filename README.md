@@ -1,1 +1,1 @@
-# imagemanager
+# Dockeringo
