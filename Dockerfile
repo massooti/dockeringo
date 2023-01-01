@@ -10,15 +10,15 @@ RUN go mod download
 # Copy app files
 COPY . .
 # Build app
-RUN go build -o app
+RUN go build -o app.run
 
 FROM alpine:3.14 as production
 # Add certificates
 RUN apk add --no-cache ca-certificates
 # Copy built binary from builder
-COPY --from=builder app .
+COPY --from=builder /app/app.run .
 # Expose port
 EXPOSE 9808
 # Exec built binary
-RUN chmod +x ./app
-CMD ["./app"]
+RUN chmod +x ./app.run
+CMD ["./app.run"]
