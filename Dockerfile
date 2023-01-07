@@ -10,15 +10,15 @@ RUN go mod download
 # Copy app files
 COPY . .
 # Build app
-RUN go build -o app.run
+RUN go build -o dockeringo
 
 FROM alpine:3.14 as production
 # Add certificates
 RUN apk add --no-cache ca-certificates
 # Copy built binary from builder
-COPY --from=builder /app/app.run .
+COPY --from=builder /app/dockeringo .
 # Expose port
 EXPOSE 9808
 # Exec built binary
-RUN chmod +x ./app.run
-CMD ["./app.run"]
+RUN chmod +x ./dockeringo
+CMD ["./dockeringo"]

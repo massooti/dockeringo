@@ -8,6 +8,7 @@ import (
 )
 
 func main() {
+	fmt.Printf("Hey Lets get started ...")
 	r := gin.Default()
 	r.GET("/", func(c *gin.Context) {
 		c.JSON(200, gin.H{
